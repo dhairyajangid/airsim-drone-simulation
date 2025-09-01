@@ -1,4 +1,4 @@
-# airsim-drone-simulation
+# Airsim-Drone-Simulation
 1> This is the airsim drone simulation project using python, openCV etc <br>
 2> In this project, if you draw anything on the paint, it means any shape such as triangle, rectangle, square, polygon etc. <br>
 3> you need to have the following requirement to start this project. <br>
