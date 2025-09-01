@@ -1,0 +1,282 @@
+import airsim
+import time
+import keyboard
+import threading
+
+class SimpleCameraControl:
+    def __init__(self):
+        self.client = None
+        self.camera_speed = 5.0  # meters per second
+        self.is_running = False
+        
+    def connect(self):
+        """Connect to AirSim"""
+        try:
+            print("🔌 Connecting to AirSim for camera control...")
+            self.client = airsim.VehicleClient()
+            self.client.confirmConnection()
+            print("✅ Camera control connected!")
+            return True
+        except Exception as e:
+            print(f"❌ Camera connection failed: {e}")
+            return False
+    
+    def move_camera(self, direction):
+        """Move camera in specified direction"""
+        if not self.client:
+            return
+        
+        try:
+            # Get current camera pose
+            camera_info = self.client.simGetCameraInfo("0")
+            current_pos = camera_info.pose.position
+            
+            # Calculate new position based on direction
+            new_x = current_pos.x_val
+            new_y = current_pos.y_val
+            new_z = current_pos.z_val
+            
+            if direction == 'forward':
+                new_x += self.camera_speed
+            elif direction == 'backward':
+                new_x -= self.camera_speed
+            elif direction == 'left':
+                new_y -= self.camera_speed
+            elif direction == 'right':
+                new_y += self.camera_speed
+            elif direction == 'up':
+                new_z -= self.camera_speed  # Negative Z is up in AirSim
+            elif direction == 'down':
+                new_z += self.camera_speed
+            
+            # Set new camera position
+            new_pose = airsim.Pose()
+            new_pose.position.x_val = new_x
+            new_pose.position.y_val = new_y
+            new_pose.position.z_val = new_z
+            
+            # Keep same orientation
+            new_pose.orientation = camera_info.pose.orientation
+            
+            self.client.simSetCameraPose("0", new_pose)
+            print(f"📹 Camera moved {direction} to ({new_x:.1f}, {new_y:.1f}, {new_z:.1f})")
+            
+        except Exception as e:
+            print(f"❌ Camera move failed: {e}")
+    
+    def reset_camera(self):
+        """Reset camera to default position"""
+        try:
+            # Reset to default pose
+            default_pose = airsim.Pose()
+            default_pose.position.x_val = 0
+            default_pose.position.y_val = 0
+            default_pose.position.z_val = -10
+            
+            self.client.simSetCameraPose("0", default_pose)
+            print("📹 Camera reset to default position")
+            
+        except Exception as e:
+            print(f"❌ Camera reset failed: {e}")
+    
+    def start_control(self):
+        """Start camera control with arrow keys"""
+        if not self.connect():
+            return
+        
+        self.is_running = True
+        print("\n🎮 Camera Control Started!")
+        print("📋 Controls:")
+        print("   ⬆️  Up Arrow    = Move Forward")
+        print("   ⬇️  Down Arrow  = Move Backward") 
+        print("   ⬅️  Left Arrow  = Move Left")
+        print("   ➡️  Right Arrow = Move Right")
+        print("   🔼 Page Up     = Move Up")
+        print("   🔽 Page Down   = Move Down")
+        print("   🏠 Home        = Reset Camera")
+        print("   ❌ ESC         = Exit")
+        print("\n✅ Ready! Use arrow keys to control camera...")
+        
+        # Main control loop
+        while self.is_running:
+            try:
+                # Check for key presses
+                if keyboard.is_pressed('up'):
+                    self.move_camera('forward')
+                    time.sleep(0.1)
+                    
+                elif keyboard.is_pressed('down'):
+                    self.move_camera('backward')
+                    time.sleep(0.1)
+                    
+                elif keyboard.is_pressed('left'):
+                    self.move_camera('left')
+                    time.sleep(0.1)
+                    
+                elif keyboard.is_pressed('right'):
+                    self.move_camera('right')
+                    time.sleep(0.1)
+                    
+                elif keyboard.is_pressed('page up'):
+                    self.move_camera('up')
+                    time.sleep(0.1)
+                    
+                elif keyboard.is_pressed('page down'):
+                    self.move_camera('down')
+                    time.sleep(0.1)
+                    
+                elif keyboard.is_pressed('home'):
+                    self.reset_camera()
+                    time.sleep(0.3)
+                    
+                elif keyboard.is_pressed('esc'):
+                    print("👋 Exiting camera control...")
+                    self.is_running = False
+                    break
+                
+                time.sleep(0.05)  # Small delay to prevent excessive CPU usage
+                
+            except KeyboardInterrupt:
+                print("\n👋 Camera control stopped!")
+                self.is_running = False
+                break
+            except Exception as e:
+                print(f"❌ Control error: {e}")
+                time.sleep(0.1)
+    
+    def stop_control(self):
+        """Stop camera control"""
+        self.is_running = False
+
+# Alternative version using input() for systems without keyboard library
+class SimpleInputCameraControl:
+    def __init__(self):
+        self.client = None
+        self.camera_speed = 5.0
+        
+    def connect(self):
+        """Connect to AirSim"""
+        try:
+            print("🔌 Connecting to AirSim for camera control...")
+            self.client = airsim.VehicleClient()
+            self.client.confirmConnection()
+            print("✅ Camera control connected!")
+            return True
+        except Exception as e:
+            print(f"❌ Camera connection failed: {e}")
+            return False
+    
+    def start_control(self):
+        """Start camera control with text input"""
+        if not self.connect():
+            return
+        
+        print("\n🎮 Simple Camera Control Started!")
+        print("📋 Commands:")
+        print("   w = Forward    s = Backward")
+        print("   a = Left       d = Right") 
+        print("   q = Up         e = Down")
+        print("   r = Reset      x = Exit")
+        
+        while True:
+            try:
+                command = input("\n🕹️ Enter command (w/a/s/d/q/e/r/x): ").lower().strip()
+                
+                if command == 'w':
+                    self.move_camera('forward')
+                elif command == 's':
+                    self.move_camera('backward')
+                elif command == 'a':
+                    self.move_camera('left')
+                elif command == 'd':
+                    self.move_camera('right')
+                elif command == 'q':
+                    self.move_camera('up')
+                elif command == 'e':
+                    self.move_camera('down')
+                elif command == 'r':
+                    self.reset_camera()
+                elif command == 'x':
+                    print("👋 Exiting camera control...")
+                    break
+                else:
+                    print("❌ Invalid command! Use w/a/s/d/q/e/r/x")
+                    
+            except KeyboardInterrupt:
+                print("\n👋 Camera control stopped!")
+                break
+            except Exception as e:
+                print(f"❌ Error: {e}")
+    
+    def move_camera(self, direction):
+        """Move camera in specified direction"""
+        if not self.client:
+            return
+        
+        try:
+            camera_info = self.client.simGetCameraInfo("0")
+            current_pos = camera_info.pose.position
+            
+            new_x = current_pos.x_val
+            new_y = current_pos.y_val
+            new_z = current_pos.z_val
+            
+            if direction == 'forward':
+                new_x += self.camera_speed
+            elif direction == 'backward':
+                new_x -= self.camera_speed
+            elif direction == 'left':
+                new_y -= self.camera_speed
+            elif direction == 'right':
+                new_y += self.camera_speed
+            elif direction == 'up':
+                new_z -= self.camera_speed
+            elif direction == 'down':
+                new_z += self.camera_speed
+            
+            new_pose = airsim.Pose()
+            new_pose.position.x_val = new_x
+            new_pose.position.y_val = new_y
+            new_pose.position.z_val = new_z
+            new_pose.orientation = camera_info.pose.orientation
+            
+            self.client.simSetCameraPose("0", new_pose)
+            print(f"📹 Camera moved {direction}")
+            
+        except Exception as e:
+            print(f"❌ Camera move failed: {e}")
+    
+    def reset_camera(self):
+        """Reset camera to default position"""
+        try:
+            default_pose = airsim.Pose()
+            default_pose.position.x_val = 0
+            default_pose.position.y_val = 0
+            default_pose.position.z_val = -10
+            
+            self.client.simSetCameraPose("0", default_pose)
+            print("📹 Camera reset to default position")
+            
+        except Exception as e:
+            print(f"❌ Camera reset failed: {e}")
+
+# Main execution
+if __name__ == "__main__":
+    print("🎮 Choose Camera Control Method:")
+    print("1. Arrow Keys (requires keyboard library)")
+    print("2. Text Input (w/a/s/d keys)")
+    
+    choice = input("Enter choice (1 or 2): ").strip()
+    
+    if choice == "1":
+        try:
+            camera_control = SimpleCameraControl()
+            camera_control.start_control()
+        except ImportError:
+            print("❌ keyboard library not available. Install with: pip install keyboard")
+            print("🔄 Switching to text input method...")
+            camera_control = SimpleInputCameraControl()
+            camera_control.start_control()
+    else:
+        camera_control = SimpleInputCameraControl()
+        camera_control.start_control()
