@@ -19,6 +19,6 @@
 7> In block (.uproject) file we can run the simulation here this is unreal environment for simulation. <br> 
 8> to start the simulation there is play button on the right top side click on that button it will show for play <br>
 9> you need to have the anaconda prompt if you have anaconda install you already have it. it basically the cmd for anaconda <br>
-10> you need to go through the folder where you save the repo files AirSim\PythonClient\multirotor\drone_formation_system then you need to create the env file ex:- c: cd \AirSim\PythonClient\multirotor\drone_formation_system  conda activate airsimenv 
-11> you need to activate like this as shown above it will activate the virtual environment for airsim
+10> you need to go through the folder where you save the repo files AirSim\PythonClient\multirotor\drone_formation_system then you need to create the env file ex:- c: cd \AirSim\PythonClient\multirotor\drone_formation_system  conda activate airsimenv <br>
+11> you need to activate like this as shown above it will activate the virtual environment for airsim. <br>
 12> then you need to run the cmd ->  c:\AirSim\PythonClient\multirotor\drone_formation_system python main_controler.py by this it will run the program file for the simulation make sure that in background the block file is runing and also it in play mode 
